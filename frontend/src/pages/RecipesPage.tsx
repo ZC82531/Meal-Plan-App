@@ -17,7 +17,7 @@ export const RecipesPage = () => {
   const [isStreaming, setIsStreaming] = useState(false)
   const [showAuthModal, setShowAuthModal] = useState(false)
   const previousRecipeCount = useRef(0)
-  const hasStartedStreaming = useRef(false) 
+  const hasStartedStreaming = useRef(false)
 
   useEffect(() => {
     const fetchRecipes = async () => {
@@ -30,6 +30,7 @@ export const RecipesPage = () => {
         const state = location.state as any
         const fromState = state?.ingredients as string[] | undefined
         const imageUrlFromState = state?.imageUrl as string | undefined
+        const mealTypeFromState = state?.mealType as string | undefined
         const fromStorage = sessionStorage.getItem('detectedIngredients')
         const parsed = fromStorage ? (JSON.parse(fromStorage) as string[]) : undefined
         const ingredientsToUse = (fromState && fromState.length > 0)
@@ -42,14 +43,19 @@ export const RecipesPage = () => {
         
         if (ingredientsToUse.length > 0) {
           setIsStreaming(true)
-          setRecipes([]) 
+          setRecipes([])
           let buffer = ''
           let processedUpTo = 0
           const parsedRecipes: Recipe[] = []
+          let lastChunkTime = Date.now()
+          let backendStreamClosed = false
           
           try {
-            for await (const chunk of api.generateRecipesStream(ingredientsToUse, imageUrlFromState || undefined)) {
+            console.log('🚀 Starting to receive chunks from backend...')
+            console.log('🍽️ Meal type:', mealTypeFromState)
+            for await (const chunk of api.generateRecipesStream(ingredientsToUse, imageUrlFromState || undefined, mealTypeFromState)) {
               buffer += chunk
+              lastChunkTime = Date.now()
               
               const cleanBuffer = buffer.trim()
                 .replace(/^```json\n?/, '')
@@ -108,7 +114,7 @@ export const RecipesPage = () => {
                               Array.isArray(recipe.steps) && recipe.steps.length > 0) {
                             
                             parsedRecipes.push(recipe)
-                            setRecipes([...parsedRecipes]) 
+                            setRecipes([...parsedRecipes])
                             console.log(`✨ Recipe #${parsedRecipes.length}: "${recipe.title}"`)
                             
                             processedUpTo = pos + 1
@@ -118,47 +124,88 @@ export const RecipesPage = () => {
                         }
                         objectStart = -1
                       }
-                    } else if (char === '[' || char === ']') {
-                      depth += (char === '[' ? 1 : -1)
-                      
-                      if (char === ']' && depth < 0) {
-                        break
-                      }
                     }
                   }
                   
                   pos++
                 }
                 
-                if (processedUpTo > 100) { 
-                  buffer = buffer.slice(processedUpTo - 50)
-                  processedUpTo = 50
-                }
               }
             }
             
-            const cleanJson = buffer.trim()
+            backendStreamClosed = true
+            const timeSinceLastChunk = Date.now() - lastChunkTime
+            console.log(`✅ CONDITION 1: Backend stream closed. Last chunk was ${timeSinceLastChunk}ms ago`)
+            console.log('⏳ Now frontend will process buffer and decide when to stop animation...')
+            if (!backendStreamClosed) {
+              console.error('❌ Stream should be closed but flag not set!')
+            }
+            console.log('⏳ Waiting 1000ms to ensure all data received...')
+            await new Promise(resolve => setTimeout(resolve, 1000))
+            
+            console.log(`🔍 Processing remaining buffer (${buffer.length} chars)...`)
+            console.log(`🔍 Currently have ${parsedRecipes.length} recipes from incremental parsing`)
+            
+            let cleanJson = buffer
               .replace(/^```json\n?/, '')
               .replace(/^```\n?/, '')
               .replace(/\n?```$/, '')
               .trim()
-            
-            let finalRecipes = parsedRecipes
-            try {
-              const data = JSON.parse(cleanJson)
-              if (data.recipes && Array.isArray(data.recipes) && data.recipes.length > parsedRecipes.length) {
-                console.log(`Final parse found ${data.recipes.length} total recipes`)
-                finalRecipes = data.recipes
-                setRecipes(finalRecipes)
+
+            const firstBrace = cleanJson.indexOf('{')
+            if (firstBrace > 0) {
+              cleanJson = cleanJson.slice(firstBrace)
+            }
+
+            if (!cleanJson.endsWith(']}')) {
+              if (!cleanJson.endsWith(']')) {
+                cleanJson = `${cleanJson}]`
               }
-            } catch {
-              if (parsedRecipes.length > 0) {
-                console.log(`Stream ended with ${parsedRecipes.length} parsed recipes`)
-                finalRecipes = parsedRecipes
+              if (!cleanJson.endsWith(']}')) {
+                cleanJson = `${cleanJson}}`
               }
             }
             
-            console.log('✅ Stream complete - backend saved recipes automatically')
+            console.log(`🔍 Clean buffer for final parse: ${cleanJson.substring(0, 200)}...`)
+            
+            let finalRecipes = parsedRecipes
+            let foundNewRecipes = false
+            
+            try {
+              const data = JSON.parse(cleanJson)
+              if (data.recipes && Array.isArray(data.recipes)) {
+                const validRecipes = data.recipes.filter((r: any) => 
+                  r.title && 
+                  Array.isArray(r.ingredients) && r.ingredients.length > 0 &&
+                  Array.isArray(r.steps) && r.steps.length > 0
+                )
+                
+                if (validRecipes.length > parsedRecipes.length) {
+                  console.log(`✅ Final parse found ${validRecipes.length} total recipes (was ${parsedRecipes.length})`)
+                  finalRecipes = validRecipes
+                  foundNewRecipes = true
+                  setRecipes(validRecipes)
+                } else {
+                  console.log(`ℹ️ Final parse had ${validRecipes.length} recipes, keeping ${parsedRecipes.length} from incremental parsing`)
+                  finalRecipes = parsedRecipes
+                }
+              }
+            } catch (e) {
+              console.log(`⚠️ Final parse failed: ${e}. Using ${parsedRecipes.length} incrementally parsed recipes`)
+              finalRecipes = parsedRecipes
+            }
+            
+            if (foundNewRecipes) {
+              console.log('⏳ Waiting 800ms for new recipes to animate in...')
+              await new Promise(resolve => setTimeout(resolve, 800))
+            }
+            
+            console.log('⏳ Final 400ms buffer before closing animation...')
+            await new Promise(resolve => setTimeout(resolve, 400))
+            
+            console.log(`✅ CONDITION 2: Frontend processing complete - ${finalRecipes.length} recipes displayed.`)
+            console.log('🎬 Both conditions met (backend closed + frontend processed). Stopping animation.')
+            setIsStreaming(false)
             
           } catch (err: any) {
             console.error('Stream error:', err)
@@ -170,7 +217,6 @@ export const RecipesPage = () => {
             const result = await api.generateRecipes(ingredientsToUse)
             const fallbackRecipes = result.recipes || []
             setRecipes(fallbackRecipes)
-          } finally {
             setIsStreaming(false)
           }
         } else {

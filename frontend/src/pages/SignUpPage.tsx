@@ -84,7 +84,7 @@ export const SignUpPage = () => {
               </svg>
               <h2 className="auth-success-title">Account Created!</h2>
               <p className="auth-success-text">
-                Check your email to <strong>confirm your account</strong>.
+                You've successfully signed up! Please <strong>log in</strong> to continue.
                 <br/>
                 Redirecting to login page...
               </p>

@@ -17,16 +17,7 @@ RUN curl -fsSL https://deb.nodesource.com/setup_20.x | bash - \
 COPY backend/requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
-RUN pip install --no-cache-dir git+https://github.com/IDEA-Research/GroundingDINO.git
-RUN pip install --no-cache-dir git+https://github.com/facebookresearch/segment-anything.git
-
 COPY backend/ .
-
-RUN mkdir -p models/grounded_sam
-
-RUN python -c "import urllib.request; \
-    urllib.request.urlretrieve('https://github.com/IDEA-Research/GroundingDINO/releases/download/v0.1.0-alpha/groundingdino_swint_ogc.pth', 'models/grounded_sam/groundingdino_swint_ogc.pth'); \
-    urllib.request.urlretrieve('https://dl.fbaipublicfiles.com/segment_anything/sam_vit_b_01ec64.pth', 'models/grounded_sam/sam_vit_b_01ec64.pth')"
 
 COPY frontend/package*.json ./frontend/
 WORKDIR /app/frontend

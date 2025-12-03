@@ -13,5 +13,7 @@ services:
         sync: false
       - key: SUPABASE_SERVICE_ROLE_KEY
         sync: false
+      - key: FRONTEND_URL
+        sync: false
     healthCheckPath: /health
 

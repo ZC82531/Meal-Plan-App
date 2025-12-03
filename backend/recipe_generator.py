@@ -1,19 +1,9 @@
 import random
 from openai_service import OpenAIService
-from grounded_sam_service import grounded_sam_service
 
 class RecipeGenerator:
     def __init__(self, openai_service=None):
         self.openai_service = openai_service or OpenAIService()
-        self.vision_service = grounded_sam_service
-    
-    def detect_ingredients_from_image(self, base64_image):
-        try:
-            ingredients = self.vision_service.detect_ingredients(base64_image)
-            return ingredients
-        except Exception as e:
-            print(f"Error detecting ingredients: {str(e)}")
-            return self.detect_food_items_mock()
     
     def detect_food_items_mock(self):
         possible_ingredient_sets = [

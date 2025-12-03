@@ -4,282 +4,123 @@
   display: flex;
   align-items: center;
   justify-content: center;
+  background: linear-gradient(180deg, #0a1929 0%, #0d1b2a 50%, #1b263b 100%);
+  color: #ffffff;
   position: relative;
   overflow: hidden;
-  background: linear-gradient(180deg, #0a1929 0%, #0d1b2a 50%, #1b263b 100%);
-}
-
-.blob {
-  position: absolute;
-  border-radius: 50%;
-  filter: blur(120px);
-  opacity: 0.15;
-  animation: float 20s infinite ease-in-out;
-}
-
-.blob-1 {
-  width: 600px;
-  height: 600px;
-  background: radial-gradient(circle, #0052ff, #1652f0);
-  top: -300px;
-  left: -200px;
-  animation-delay: 0s;
-}
-
-.blob-2 {
-  width: 500px;
-  height: 500px;
-  background: radial-gradient(circle, #00d4aa, #00b894);
-  bottom: -250px;
-  right: -150px;
-  animation-delay: 7s;
-}
-
-.blob-3 {
-  width: 450px;
-  height: 450px;
-  background: radial-gradient(circle, #5b21b6, #7c3aed);
-  top: 40%;
-  right: -225px;
-  animation-delay: 14s;
-}
-
-@keyframes float {
-  0%, 100% {
-    transform: translate(0, 0) scale(1);
-  }
-  33% {
-    transform: translate(30px, -30px) scale(1.1);
-  }
-  66% {
-    transform: translate(-20px, 20px) scale(0.9);
-  }
 }
 
 .welcome-content {
-  position: relative;
-  z-index: 1;
-  text-align: center;
-  max-width: 600px;
-  padding: 2rem;
-}
-
-.welcome-icon {
-  width: 100px;
-  height: 100px;
-  margin: 0 auto 2.5rem;
-  filter: drop-shadow(0 8px 24px rgba(0, 212, 170, 0.4));
-  animation: float-icon 6s ease-in-out infinite;
-}
-
-@keyframes float-icon {
-  0%, 100% {
-    transform: translateY(0) rotate(0deg);
-  }
-  50% {
-    transform: translateY(-8px) rotate(2deg);
-  }
-}
-
-.welcome-icon svg {
   width: 100%;
-  height: 100%;
+  max-width: 980px;
+  padding: 48px 28px;
+  box-sizing: border-box;
 }
 
-@keyframes float-welcome {
-  0%, 100% {
-    transform: translateY(0) rotate(0deg);
-  }
-  50% {
-    transform: translateY(-15px) rotate(5deg);
-  }
+.hero-section {
+  text-align: center;
+  margin-bottom: 32px;
+  margin-top: 48px;
 }
 
-.welcome-title {
-  font-size: 4rem;
-  font-weight: 300;
-  background: linear-gradient(135deg, #ffffff 0%, #00d4aa 50%, #0052ff 100%);
+.hero-title {
+  font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Segoe UI', system-ui, sans-serif;
+  font-size: 48px;
+  font-weight: 700;
+  line-height: 1.05;
+  color: #ffffff; 
+  margin: 0 0 12px 0;
+  text-shadow: 0 8px 24px rgba(0,0,0,0.55);
+}
+
+.hero-title-gradient {
+  background: linear-gradient(90deg, #1d1d1f 0%, #0066cc 100%);
+  background-clip: text;
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
-  background-clip: text;
-  margin-bottom: 1rem;
-  letter-spacing: 2px;
-  font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Segoe UI', system-ui, sans-serif;
-  position: relative;
 }
 
-.welcome-title::after {
-  content: '';
-  position: absolute;
-  bottom: -0.5rem;
-  left: 50%;
-  transform: translateX(-50%);
-  width: 100px;
-  height: 2px;
-  background: linear-gradient(90deg, transparent, #00d4aa, transparent);
-  opacity: 0.6;
+.hero-subtitle {
+  font-size: 18px;
+  color: rgba(255,255,255,0.78);
+  max-width: 720px;
+  margin: 0 auto;
 }
 
-.welcome-subtitle {
-  font-size: 1.125rem;
-  color: rgba(255, 255, 255, 0.6);
-  margin-bottom: 3.5rem;
-  margin-top: 2rem;
-  line-height: 1.6;
-  font-weight: 300;
-  letter-spacing: 1px;
-}
-
-.welcome-features {
-  display: flex;
-  justify-content: center;
-  gap: 2rem;
-  margin-bottom: 3rem;
-  flex-wrap: wrap;
-}
-
-.feature-item {
+.cta-section {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 1rem;
-  padding: 2rem 1.5rem;
-  background: rgba(15, 27, 42, 0.6);
-  border-radius: 16px;
-  border: 2px solid rgba(0, 212, 170, 0.2);
-  min-width: 160px;
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  backdrop-filter: blur(10px);
-  position: relative;
-  overflow: hidden;
+  gap: 8px;
+  margin: 28px 0 40px 0;
+}
+
+.apple-cta-button {
+  background: #0071e3;
+  color: #fff;
+  border: none;
+  padding: 14px 34px;
+  border-radius: 999px;
+  font-weight: 600;
+  font-size: 16px;
   cursor: pointer;
+  box-shadow: 0 6px 20px rgba(2, 6, 23, 0.12);
+  transition: transform 180ms ease, box-shadow 180ms ease;
 }
 
-.feature-item::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  height: 2px;
-  background: linear-gradient(90deg, transparent, #00d4aa, #0052ff, transparent);
-  opacity: 0;
-  transition: opacity 0.3s ease;
-}
+.apple-cta-button:hover { transform: translateY(-3px); box-shadow: 0 12px 36px rgba(2,6,23,0.14); }
+.apple-cta-button:active { transform: translateY(0); }
 
-.feature-item::after {
-  content: '';
-  position: absolute;
-  inset: 0;
-  background: linear-gradient(135deg, rgba(0, 82, 255, 0.05), rgba(0, 212, 170, 0.05));
-  opacity: 0;
-  transition: opacity 0.3s ease;
-}
+.cta-subtext { color: #8e8e93; font-size: 14px; }
 
-.feature-item:hover {
-  background: rgba(15, 27, 42, 0.8);
-  border-color: #00d4aa;
-  transform: translateY(-4px);
-  box-shadow: 0 12px 40px rgba(0, 212, 170, 0.3);
-}
-
-.feature-item:hover::before {
-  opacity: 1;
-}
-
-.feature-item:hover::after {
-  opacity: 1;
-}
-
-.feature-icon {
-  width: 56px;
-  height: 56px;
-  padding: 12px;
-  border-radius: 50%;
-  background: rgba(0, 212, 170, 0.1);
-  border: 2px solid rgba(0, 212, 170, 0.3);
+.features-scroll-container {
   display: flex;
-  align-items: center;
-  justify-content: center;
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  position: relative;
+  flex-direction: column;
+  gap: 36px;
+  margin: 80px auto 140px auto;
+  max-width: 760px;
+  min-height: 1200px; 
 }
 
-.feature-icon svg {
-  width: 100%;
-  height: 100%;
-  color: #00d4aa;
-  transition: all 0.3s ease;
+.feature-card-scroll {
+  background: #ffffff;
+  border-radius: 18px;
+  padding: 40px 36px;
+  border: 1px solid #e6e6ea;
+  box-shadow: 0 18px 50px rgba(2,6,23,0.18);
+  transform-origin: center;
 }
 
-.feature-icon::before {
-  content: '';
-  position: absolute;
-  inset: -4px;
-  border-radius: 50%;
-  background: linear-gradient(135deg, #00d4aa, #0052ff);
-  opacity: 0;
-  filter: blur(8px);
-  transition: opacity 0.3s ease;
-}
-
-.feature-item:hover .feature-icon {
-  background: rgba(0, 212, 170, 0.2);
-  border-color: #00d4aa;
-  transform: scale(1.05);
-  box-shadow: 0 8px 24px rgba(0, 212, 170, 0.4);
-}
-
-.feature-item:hover .feature-icon::before {
-  opacity: 0.6;
-}
-
-.feature-item:hover .feature-icon svg {
-  color: #00d4aa;
-  transform: scale(1.1);
-}
-
-.feature-text {
-  font-size: 0.9375rem;
-  color: rgba(255, 255, 255, 0.9);
-  font-weight: 500;
-  font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Segoe UI', system-ui, sans-serif;
-  letter-spacing: 0.5px;
-  transition: all 0.3s ease;
-  position: relative;
-  z-index: 1;
-}
-
-.feature-item:hover .feature-text {
-  color: #00d4aa;
-  transform: scale(1.05);
-}
-
-.welcome-cta {
-  min-width: 250px;
-  margin-bottom: 2rem;
-}
-
-.welcome-footer {
-  font-size: 0.875rem;
-  color: rgba(255, 255, 255, 0.5);
-}
+.feature-title { font-size: 22px; margin: 0 0 12px 0; color: #111111; font-weight: 700; }
+.feature-description { margin: 0; color: #4b4b4f; font-size: 16px; line-height: 1.6; }
 
 @media (max-width: 768px) {
-  .welcome-title {
-    font-size: 2.5rem;
-  }
-
-  .welcome-subtitle {
-    font-size: 1rem;
-  }
-
-  .welcome-features {
-    gap: 1rem;
-  }
-
-  .feature-item {
-    min-width: 100px;
-    padding: 0.75rem;
-  }
+  .hero-title { font-size: 32px; }
+  .hero-subtitle { font-size: 16px; }
+  .features-scroll-container { gap: 18px; }
 }
+
+.bottom-cta-btn {
+  position: fixed;
+  left: 50%;
+  bottom: 24px;
+  transform: translateX(-50%);
+  background: #ffffff;
+  color: #0b1720;
+  border: none;
+  padding: 12px 28px;
+  border-radius: 999px;
+  font-weight: 600;
+  font-size: 16px;
+  box-shadow: 0 8px 30px rgba(2,6,23,0.12);
+  cursor: pointer;
+  transition: none; 
+  z-index: 60;
+}
+
+.bottom-cta-btn:hover { transform: translateX(-50%); box-shadow: 0 8px 30px rgba(2,6,23,0.12); }
+
+@media (max-width: 480px) {
+  .bottom-cta-btn { bottom: 16px; padding: 10px 20px; font-size: 15px; }
+}
+

@@ -78,6 +78,7 @@ addEventListener('message', async function (event) {
         return client.id !== clientId
       })
 
+      // Unregister itself when there are no more clients
       if (remainingClients.length === 0) {
         self.registration.unregister()
       }
@@ -90,10 +91,13 @@ addEventListener('message', async function (event) {
 addEventListener('fetch', function (event) {
   const requestInterceptedAt = Date.now()
 
+  // Bypass navigation requests.
   if (event.request.mode === 'navigate') {
     return
   }
 
+  // Opening the DevTools triggers the "only-if-cached" request
+  // that cannot be handled by the worker. Bypass such requests.
   if (
     event.request.cache === 'only-if-cached' &&
     event.request.mode !== 'same-origin'
@@ -101,6 +105,9 @@ addEventListener('fetch', function (event) {
     return
   }
 
+  // Bypass all requests when there are no active clients.
+  // Prevents the self-unregistered worked from handling requests
+  // after it's been terminated (still remains active until the next reload).
   if (activeClientIds.size === 0) {
     return
   }
@@ -124,9 +131,13 @@ async function handleRequest(event, requestId, requestInterceptedAt) {
     requestInterceptedAt,
   )
 
+  // Send back the response clone for the "response:*" life-cycle events.
+  // Ensure MSW is active and ready to handle the message, otherwise
+  // this message will pend indefinitely.
   if (client && activeClientIds.has(client.id)) {
     const serializedRequest = await serializeRequest(requestCloneForEvents)
 
+    // Clone the response so both the client and the library could consume it.
     const responseClone = response.clone()
 
     sendToClient(
@@ -180,9 +191,12 @@ async function resolveMainClient(event) {
 
   return allClients
     .filter((client) => {
+      // Get only those clients that are currently visible.
       return client.visibilityState === 'visible'
     })
     .find((client) => {
+      // Find the client ID that's recorded in the
+      // set of clients that have registered the worker.
       return activeClientIds.has(client.id)
     })
 }
@@ -195,11 +209,18 @@ async function resolveMainClient(event) {
  * @returns {Promise<Response>}
  */
 async function getResponse(event, client, requestId, requestInterceptedAt) {
+  // Clone the request because it might've been already used
+  // (i.e. its body has been read and sent to the client).
   const requestClone = event.request.clone()
 
   function passthrough() {
+    // Cast the request headers to a new Headers instance
+    // so the headers can be manipulated with.
     const headers = new Headers(requestClone.headers)
 
+    // Remove the "accept" header value that marked this request as passthrough.
+    // This prevents request alteration and also keeps it compliant with the
+    // user-defined CORS policies.
     const acceptHeader = headers.get('accept')
     if (acceptHeader) {
       const values = acceptHeader.split(',').map((value) => value.trim())
@@ -217,14 +238,20 @@ async function getResponse(event, client, requestId, requestInterceptedAt) {
     return fetch(requestClone, { headers })
   }
 
+  // Bypass mocking when the client is not active.
   if (!client) {
     return passthrough()
   }
 
+  // Bypass initial page load requests (i.e. static assets).
+  // The absence of the immediate/parent client in the map of the active clients
+  // means that MSW hasn't dispatched the "MOCK_ACTIVATE" event yet
+  // and is not ready to handle requests.
   if (!activeClientIds.has(client.id)) {
     return passthrough()
   }
 
+  // Notify the client that a request has been intercepted.
   const serializedRequest = await serializeRequest(event.request)
   const clientMessage = await sendToClient(
     client,
@@ -282,6 +309,10 @@ function sendToClient(client, message, transferrables = []) {
  * @returns {Response}
  */
 function respondWithMock(response) {
+  // Setting response status code to 0 is a no-op.
+  // However, when responding with a "Response.error()", the produced Response
+  // instance will have status code set to 0. Since it's not possible to create
+  // a Response instance with status code 0, handle that use-case separately.
   if (response.status === 0) {
     return Response.error()
   }

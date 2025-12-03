@@ -11,4 +11,4 @@ venv/
 *.log
 .git/
 .gitignore
-*.md
+node_modules/

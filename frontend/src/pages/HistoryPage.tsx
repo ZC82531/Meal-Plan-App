@@ -4,7 +4,10 @@ import { useNavigate } from 'react-router-dom'
 import { GlassCard } from '../components/GlassCard'
 import RecipeCard from '../components/RecipeCard'
 import Navbar from '../components/Navbar'
-import './RecipesPage.css' 
+import { ensureValidToken } from '../services/supabase'
+import './RecipesPage.css'
+
+const BASE_URL = import.meta.env.VITE_API_URL ?? 'http://localhost:5001'
 
 interface RecipeSearch {
   id: string
@@ -30,17 +33,24 @@ export const HistoryPage = () => {
   const [expandedSearch, setExpandedSearch] = useState<string | null>(null)
   const [deletingId, setDeletingId] = useState<string | null>(null)
   const [deleteConfirmId, setDeleteConfirmId] = useState<string | null>(null)
+  const [zoomedImage, setZoomedImage] = useState<string | null>(null)
 
   useEffect(() => {
     const fetchHistory = async () => {
       try {
+        const isValid = await ensureValidToken()
+        if (!isValid) {
+          navigate('/login')
+          return
+        }
+
         const token = localStorage.getItem('access_token')
         if (!token) {
           navigate('/login')
           return
         }
 
-        const response = await fetch('http://localhost:5001/api/recipe-history', {
+        const response = await fetch(`${BASE_URL}/api/recipe-history`, {
           headers: {
             'Authorization': `Bearer ${token}`
           }
@@ -69,7 +79,7 @@ export const HistoryPage = () => {
   }
 
   const deleteSearch = async (searchId: string, e: React.MouseEvent) => {
-    e.stopPropagation() // Prevent expanding/collapsing when clicking delete
+    e.stopPropagation()
     
     setDeleteConfirmId(searchId)
   }
@@ -78,9 +88,16 @@ export const HistoryPage = () => {
     try {
       setDeletingId(searchId)
       setDeleteConfirmId(null)
+      
+      const isValid = await ensureValidToken()
+      if (!isValid) {
+        navigate('/login')
+        return
+      }
+      
       const token = localStorage.getItem('access_token')
       
-      const response = await fetch(`http://localhost:5001/api/delete-recipe-search/${searchId}`, {
+      const response = await fetch(`${BASE_URL}/api/delete-recipe-search/${searchId}`, {
         method: 'DELETE',
         headers: {
           'Authorization': `Bearer ${token}`
@@ -170,15 +187,30 @@ export const HistoryPage = () => {
                     onClick={() => toggleSearch(search.id)}
                     style={{ cursor: 'pointer' }}
                   >
-                    <div className="history-image-preview">
+                    <div 
+                      className="history-image-preview"
+                      onClick={(e) => {
+                        e.stopPropagation()
+                        setZoomedImage(search.image_url)
+                      }}
+                      style={{ cursor: 'zoom-in' }}
+                    >
                       <img 
                         src={search.image_url} 
                         alt="Ingredients" 
                         style={{
                           width: '100%',
                           height: '150px',
-                          objectFit: 'cover',
-                          borderRadius: '12px'
+                          objectFit: 'contain',
+                          borderRadius: '12px',
+                          backgroundColor: 'rgba(0, 0, 0, 0.2)',
+                          transition: 'transform 0.2s ease',
+                        }}
+                        onMouseEnter={(e) => {
+                          e.currentTarget.style.transform = 'scale(1.02)'
+                        }}
+                        onMouseLeave={(e) => {
+                          e.currentTarget.style.transform = 'scale(1)'
                         }}
                       />
                     </div>
@@ -195,15 +227,70 @@ export const HistoryPage = () => {
                           })}
                         </p>
                         
-                        <div className="ingredients-tags" style={{ marginTop: '8px' }}>
+                        <div className="ingredients-tags" style={{ marginTop: '8px', position: 'relative' }}>
                           {search.ingredients.slice(0, 5).map((ingredient, i) => (
                             <span key={i} className="ingredient-tag">
                               {ingredient}
                             </span>
                           ))}
                           {search.ingredients.length > 5 && (
-                            <span className="ingredient-tag">
+                            <span 
+                              className="ingredient-tag"
+                              style={{ cursor: 'pointer', position: 'relative' }}
+                              onMouseEnter={(e) => {
+                                const tooltip = e.currentTarget.querySelector('.ingredients-tooltip') as HTMLElement
+                                if (tooltip) tooltip.style.display = 'block'
+                              }}
+                              onMouseLeave={(e) => {
+                                const tooltip = e.currentTarget.querySelector('.ingredients-tooltip') as HTMLElement
+                                if (tooltip) tooltip.style.display = 'none'
+                              }}
+                            >
                               +{search.ingredients.length - 5} more
+                              <div 
+                                className="ingredients-tooltip"
+                                style={{
+                                  display: 'none',
+                                  position: 'absolute',
+                                  bottom: '100%',
+                                  left: '0',
+                                  marginBottom: '8px',
+                                  background: 'rgba(30, 30, 50, 0.98)',
+                                  backdropFilter: 'blur(20px)',
+                                  border: '1px solid rgba(255, 255, 255, 0.2)',
+                                  borderRadius: '12px',
+                                  padding: '12px',
+                                  minWidth: '200px',
+                                  maxWidth: '300px',
+                                  boxShadow: '0 8px 32px rgba(0, 0, 0, 0.4)',
+                                  zIndex: 100,
+                                  pointerEvents: 'none'
+                                }}
+                              >
+                                <div style={{ 
+                                  fontSize: '11px', 
+                                  fontWeight: '600', 
+                                  color: 'rgba(255, 255, 255, 0.6)',
+                                  marginBottom: '8px',
+                                  textTransform: 'uppercase',
+                                  letterSpacing: '0.5px'
+                                }}>
+                                  Remaining Ingredients
+                                </div>
+                                {search.ingredients.slice(5).map((ingredient, i) => (
+                                  <div 
+                                    key={i}
+                                    style={{
+                                      padding: '6px 0',
+                                      borderBottom: i < search.ingredients.length - 6 ? '1px solid rgba(255, 255, 255, 0.1)' : 'none',
+                                      color: 'rgba(255, 255, 255, 0.9)',
+                                      fontSize: '13px'
+                                    }}
+                                  >
+                                    {ingredient}
+                                  </div>
+                                ))}
+                              </div>
                             </span>
                           )}
                         </div>
@@ -368,6 +455,75 @@ export const HistoryPage = () => {
               </button>
             </div>
           </motion.div>
+        </div>
+      )}
+
+      {zoomedImage && (
+        <div
+          style={{
+            position: 'fixed',
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            backgroundColor: 'rgba(0, 0, 0, 0.9)',
+            backdropFilter: 'blur(10px)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            zIndex: 2000,
+            cursor: 'zoom-out',
+            padding: '20px'
+          }}
+          onClick={() => setZoomedImage(null)}
+        >
+          <motion.img
+            src={zoomedImage}
+            alt="Zoomed ingredients"
+            initial={{ opacity: 0, scale: 0.8 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 0.8 }}
+            transition={{ type: 'spring', damping: 25, stiffness: 300 }}
+            style={{
+              maxWidth: '90%',
+              maxHeight: '90%',
+              objectFit: 'contain',
+              borderRadius: '16px',
+              boxShadow: '0 20px 60px rgba(0, 0, 0, 0.5)'
+            }}
+            onClick={(e) => e.stopPropagation()}
+          />
+          <button
+            onClick={() => setZoomedImage(null)}
+            style={{
+              position: 'absolute',
+              top: '20px',
+              right: '20px',
+              background: 'rgba(255, 255, 255, 0.2)',
+              border: '1px solid rgba(255, 255, 255, 0.3)',
+              borderRadius: '8px',
+              width: '44px',
+              height: '44px',
+              color: '#fff',
+              fontSize: '24px',
+              cursor: 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              backdropFilter: 'blur(10px)',
+              transition: 'all 0.2s ease'
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.background = 'rgba(255, 255, 255, 0.3)'
+              e.currentTarget.style.transform = 'scale(1.1)'
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.background = 'rgba(255, 255, 255, 0.2)'
+              e.currentTarget.style.transform = 'scale(1)'
+            }}
+          >
+            ×
+          </button>
         </div>
       )}
     </div>

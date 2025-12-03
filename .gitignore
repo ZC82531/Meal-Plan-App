@@ -1,4 +1,3 @@
-
 __pycache__/
 *.py[cod]
 *$py.class
@@ -28,15 +27,3 @@ Thumbs.db
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
-
-.cache/
-
-backend/models/grounded_sam/*.pth
-
-test_*.py
-test-*.js
-*_test.py
-*_test.js
-
-temp/
-tmp/

@@ -11,7 +11,7 @@ supabase_url = os.getenv('SUPABASE_URL')
 supabase_key = os.getenv('SUPABASE_SERVICE_ROLE_KEY')
 
 if not supabase_url or not supabase_key:
-    print("Supabase credentials not found")
+    print("❌ Supabase credentials not found")
     exit(1)
 
 from supabase import create_client
@@ -30,8 +30,9 @@ try:
         
         print("Copy one of these user IDs to use in test_save_logic.py")
     else:
-        print("No users found. Please sign up first at http://localhost:3000")
+        frontend_url = os.getenv('FRONTEND_URL', 'http://localhost:3000')
+        print(f"No users found. Please sign up first at {frontend_url}")
 except Exception as e:
-    print(f"Error: {e}")
+    print(f"❌ Error: {e}")
     import traceback
     traceback.print_exc()
